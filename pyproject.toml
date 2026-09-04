@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "contract-intelligence-risk"
+version = "0.1.0"
+description = "AI-Powered Contract Intelligence & Risk Scoring"
+requires-python = ">=3.11"
+authors = [
+    { name="Developer" }
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = []
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.pytest.ini_options]
+addopts = "-v --cov=src --cov-report=term-missing"
+testpaths = ["tests"]

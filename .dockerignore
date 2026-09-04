@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+
+# Environments
+.env
+.venv
+venv
+
+# Caches
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Tests
+tests/
+
+# Documentation
+docs/
+*.md
+
+# Data and Artifacts
+data/
+artifacts/
+reports/
+
+# IDEs
+.idea
+.vscode
