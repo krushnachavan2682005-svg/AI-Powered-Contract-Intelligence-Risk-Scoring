@@ -1,12 +1,12 @@
 import json
 import logging
 from pathlib import Path
-from typing import Dict, Any
 
-from src.data.schemas import ContractRecord
 from src.data.legal_preprocessor import LegalPreprocessor, NormalizationPolicy
+from src.data.schemas import ContractRecord
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
 
 def main():
     input_path = Path("data/interim/cuad/contracts.jsonl")
@@ -38,41 +38,48 @@ def main():
         "contracts_with_repeated_whitespace": 0,
         "answer_spans_verified": 0,
         "answer_offset_failures": 0,
-        "total_clauses": 0
+        "total_clauses": 0,
     }
 
     processed_records = []
 
     logging.info(f"Starting legal-safe preprocessing from {input_path}")
 
-    with open(input_path, 'r', encoding='utf-8') as f:
+    with open(input_path, "r", encoding="utf-8") as f:
         for line in f:
             if not line.strip():
                 continue
-                
+
             data = json.loads(line)
             record = ContractRecord(**data)
             stats["total_contracts"] += 1
-            
+
             # Analyze text
             analysis = preprocessor.analyze_text(record.context)
-            if analysis.has_crlf: stats["contracts_with_crlf"] += 1
-            if analysis.has_cr: stats["contracts_with_cr"] += 1
-            if analysis.has_lf: stats["contracts_with_lf"] += 1
-            if analysis.has_control_chars: stats["contracts_with_control_chars"] += 1
-            if analysis.has_non_ascii: stats["contracts_with_non_ascii"] += 1
-            if analysis.has_tabs: stats["contracts_with_tabs"] += 1
-            if analysis.has_repeated_whitespace: stats["contracts_with_repeated_whitespace"] += 1
+            if analysis.has_crlf:
+                stats["contracts_with_crlf"] += 1
+            if analysis.has_cr:
+                stats["contracts_with_cr"] += 1
+            if analysis.has_lf:
+                stats["contracts_with_lf"] += 1
+            if analysis.has_control_chars:
+                stats["contracts_with_control_chars"] += 1
+            if analysis.has_non_ascii:
+                stats["contracts_with_non_ascii"] += 1
+            if analysis.has_tabs:
+                stats["contracts_with_tabs"] += 1
+            if analysis.has_repeated_whitespace:
+                stats["contracts_with_repeated_whitespace"] += 1
 
             # Count answers and clauses before
             for clause in record.clauses:
                 stats["total_clauses"] += 1
                 stats["answer_spans_verified"] += len(clause.answers)
-            
+
             try:
                 processed_record = preprocessor.normalize_contract(record)
                 processed_records.append(processed_record)
-                
+
                 if processed_record.normalized_context is not None:
                     stats["modified_contracts"] += 1
                 else:
@@ -83,19 +90,16 @@ def main():
                 exit(1)
 
     # Write normalized jsonl
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         for rec in processed_records:
             f.write(rec.model_dump_json() + "\n")
 
-    summary = {
-        "metrics": stats,
-        "policy": policy.model_dump()
-    }
+    summary = {"metrics": stats, "policy": policy.model_dump()}
 
-    with open(summary_path, 'w', encoding='utf-8') as f:
+    with open(summary_path, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
 
-    with open(report_json_path, 'w', encoding='utf-8') as f:
+    with open(report_json_path, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
 
     # Generate MD report
@@ -138,7 +142,7 @@ Processed schema with identical structural fidelity. Output location: `{output_p
 Dataset is fully canonical, checked, and safe for long-document chunking and model-specific tokenization steps.
 """
 
-    with open(report_md_path, 'w', encoding='utf-8') as f:
+    with open(report_md_path, "w", encoding="utf-8") as f:
         f.write(md_content)
 
     print("\nLegal-Safe Preprocessing Complete\n")
@@ -148,6 +152,7 @@ Dataset is fully canonical, checked, and safe for long-document chunking and mod
     print(f"Answer spans verified: {stats['answer_spans_verified']}")
     print(f"Offset failures: {stats['answer_offset_failures']}\n")
     print(f"Output:\n{output_path}")
+
 
 if __name__ == "__main__":
     main()
