@@ -83,8 +83,10 @@ def test_answer_crossing_boundary_recovered_by_overlap():
     chunker = AnswerAwareChunker(config)
     # 0123456789 (chunk 1) ends at 10.
     # answer is from 8 to 14: "89abcd" -> 6 chars
-    # Chunk 1 won't contain it because it ends at 14. Wait, dynamic expansion might expand it!
-    # Because answer starts at 8, which is < 10, dynamic expansion will expand chunk 1 to end at 14!
+    # Chunk 1 won't contain it because it ends at 14.
+    # Wait, dynamic expansion might expand it!
+    # Because answer starts at 8, which is < 10, dynamic expansion
+    # will expand chunk 1 to end at 14!
     ans = AnswerRecord(text="89abcd", start=8, end=14)
     clause = ClauseRecord(
         annotation_id="a2", category="Cat", is_present=True, answers=[ans]

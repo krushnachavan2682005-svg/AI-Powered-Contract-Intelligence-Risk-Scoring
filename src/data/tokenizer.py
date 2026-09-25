@@ -20,7 +20,8 @@ class TokenizerWrapper:
         tokenizer = AutoTokenizer.from_pretrained(self.config.model_name, use_fast=True)  # type: ignore
         if not isinstance(tokenizer, PreTrainedTokenizerFast):
             raise ValueError(
-                f"Tokenizer {self.config.model_name} is not a fast tokenizer. Fast tokenizer is required for offset mapping."
+                f"Tokenizer {self.config.model_name} is not a fast tokenizer. "
+                f"Fast tokenizer is required for offset mapping."
             )
         self.tokenizer = tokenizer
 
@@ -34,7 +35,8 @@ class TokenizerWrapper:
 
     def tokenize_chunk(self, text: str) -> Dict[str, Any]:
         """
-        Tokenizes the chunk and returns offsets without truncation unless max_length is set.
+        Tokenizes the chunk and returns offsets without truncation
+        unless max_length is set.
         """
         encoding = self.tokenizer(
             text,
@@ -71,7 +73,8 @@ class TokenizerWrapper:
                 token_end = idx
                 break
 
-        # Edge case: Answer might end exactly at the token start, which we might miss above
+        # Edge case: Answer might end exactly at the token start, which we might
+        # miss above
         if token_start is not None and token_end is None:
             # Check if char_end aligns exactly with a token end or we just reached it
             for idx in range(token_start, len(offset_mapping)):

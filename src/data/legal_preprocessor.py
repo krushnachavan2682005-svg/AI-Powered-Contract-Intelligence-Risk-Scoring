@@ -9,7 +9,8 @@ from src.data.schemas import ClauseRecord, ContractRecord
 class NormalizationPolicy(BaseModel):
     """
     Defines the policy for legal text normalization.
-    By default, all options that could alter text length and offset mappings are disabled.
+    By default, all options that could alter text length and offset mappings
+    are disabled.
     """
 
     preserve_case: bool = True
@@ -83,7 +84,8 @@ class LegalPreprocessor:
         # Dates like MM/DD/YYYY or Month DD, YYYY
         analysis.has_dates = bool(
             re.search(
-                r"\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* \d{1,2}, \d{4}|\d{1,2}/\d{1,2}/\d{2,4}\b",
+                r"\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* "
+                r"\d{1,2}, \d{4}|\d{1,2}/\d{1,2}/\d{2,4}\b",
                 text,
                 re.IGNORECASE,
             )
@@ -134,13 +136,18 @@ class LegalPreprocessor:
     def verify_answer_offsets(
         self, original_record: ContractRecord, normalized_text: str
     ) -> None:
-        """Verifies that all answer spans in the original record still map correctly in the normalized text."""
+        """
+        Verifies that all answer spans in the original record still map correctly
+        in the normalized text.
+        """
         for clause in original_record.clauses:
             for answer in clause.answers:
                 # The extracted span from the normalized text
                 span_text = normalized_text[answer.start : answer.end]
                 if span_text != answer.text:
                     raise ValueError(
-                        f"Offset corruption detected in document {original_record.document_id}! "
-                        f"Expected '{answer.text}', but got '{span_text}' at [{answer.start}:{answer.end}]."
+                        f"Offset corruption detected in document "
+                        f"{original_record.document_id}! "
+                        f"Expected '{answer.text}', but got '{span_text}' "
+                        f"at [{answer.start}:{answer.end}]."
                     )

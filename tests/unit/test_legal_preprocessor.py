@@ -62,7 +62,8 @@ def test_offset_corruption_detected():
     policy = NormalizationPolicy(replace_control_characters=True)
     preprocessor = LegalPreprocessor(policy)
 
-    # Let's say we have a contract that gets normalized (e.g. control char stripped instead of replaced)
+    # Let's say we have a contract that gets normalized
+    # (e.g. control char stripped instead of replaced)
     # But our code replaces it with space, which preserves length.
     # We can test the verifier directly to simulate corruption.
     context = "The party shall terminate."
