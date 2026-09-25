@@ -49,7 +49,8 @@ class AnswerAwareChunker:
         self.config = config or ChunkingConfig()
         if self.config.overlap >= self.config.chunk_size:
             raise ValueError(
-                f"Overlap ({self.config.overlap}) must be less than chunk_size ({self.config.chunk_size})."
+                f"Overlap ({self.config.overlap}) must be less than "
+                f"chunk_size ({self.config.chunk_size})."
             )
 
     def chunk_contract(self, record: ProcessedContractRecord) -> List[ChunkRecord]:
@@ -111,7 +112,8 @@ class AnswerAwareChunker:
 
                     if chunk_text[local_start:local_end] != ans["answer_text"]:
                         raise ValueError(
-                            f"Offset corruption during chunking for {ans['annotation_id']}"
+                            f"Offset corruption during chunking for "
+                            f"{ans['annotation_id']}"
                         )
 
                     chunk_answers.append(
