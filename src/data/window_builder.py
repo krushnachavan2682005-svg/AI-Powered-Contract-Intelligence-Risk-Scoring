@@ -87,9 +87,13 @@ class QAWindowBuilder:
 
         for idx in context_token_indices:
             token_char_start, token_char_end = offset_mapping[idx]
-            if token_char_start <= ans_local_start and token_start == -1:
+            
+            # token_start is the first token whose end is past the start of the answer
+            if token_start == -1 and token_char_end > ans_local_start:
                 token_start = idx
-            if token_char_end >= ans_local_end and token_end == -1:
+            
+            # token_end is the last token whose start is before the end of the answer
+            if token_char_start < ans_local_end:
                 token_end = idx
 
         if token_start == -1:
