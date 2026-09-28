@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Contract Intelligence & Risk Scoring</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 900px; margin: 50px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; }
+        p.subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
+        .upload-area { border: 2px dashed #3498db; padding: 40px; text-align: center; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
+        .upload-area:hover { background: #ecf0f1; }
+        .btn { background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+        .btn:disabled { background: #95a5a6; cursor: not-allowed; }
+        .results { margin-top: 40px; }
+        .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .risk-high { border-left: 5px solid #e74c3c; }
+        .risk-medium { border-left: 5px solid #f39c12; }
+        .loader { display: none; margin: 20px auto; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error { color: #e74c3c; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI-Powered Contract Intelligence & Risk Scoring</h1>
+        <p class="subtitle">Upload a contract and extract key CUAD clauses using a fine-tuned DistilBERT extractive QA model.</p>
+        
+        <div class="upload-area" id="upload-area">
+            <p>Drag & Drop a PDF or TXT contract here, or click to select a file.</p>
+            <input type="file" id="file-input" accept=".pdf,.txt" style="display: none;">
+            <button class="btn" id="analyze-btn">Analyze Contract</button>
+        </div>
+
+        <div class="loader" id="loader"></div>
+        <p class="error" id="error-msg"></p>
+
+        <div class="results" id="results" style="display: none;">
+            <h2>Analysis Summary</h2>
+            <div class="card" id="summary-card"></div>
+
+            <h2>Risk Indicators</h2>
+            <div id="risk-container"></div>
+
+            <h2>Extracted Clauses</h2>
+            <div id="clauses-container"></div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const loader = document.getElementById('loader');
+        const errorMsg = document.getElementById('error-msg');
+        const results = document.getElementById('results');
+        let selectedFile = null;
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if(e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
+                uploadArea.innerHTML = `<p>Selected: <strong>${selectedFile.name}</strong></p><button class="btn" id="analyze-btn">Analyze Contract</button>`;
+                document.getElementById('analyze-btn').addEventListener('click', analyzeContract);
+            }
+        });
+
+        async function analyzeContract(e) {
+            e.stopPropagation();
+            if (!selectedFile) return;
+
+            loader.style.display = 'block';
+            results.style.display = 'none';
+            errorMsg.textContent = '';
+            document.getElementById('analyze-btn').disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Analysis failed');
+                }
+
+                displayResults(data);
+            } catch (err) {
+                errorMsg.textContent = err.message;
+            } finally {
+                loader.style.display = 'none';
+                document.getElementById('analyze-btn').disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            results.style.display = 'block';
+
+            // Summary
+            document.getElementById('summary-card').innerHTML = `
+                <p><strong>Filename:</strong> ${data.filename}</p>
+                <p><strong>Extracted Text Length:</strong> ${data.document_statistics.extracted_text_length} chars</p>
+                <p><strong>Processing Time:</strong> ${data.processing_metadata.processing_time_seconds}s</p>
+                <p><strong>Clauses Detected:</strong> ${data.extractions.length}</p>
+                <p><strong>Risk Indicators:</strong> ${data.risk_indicators.length}</p>
+            `;
+
+            // Risks
+            const riskContainer = document.getElementById('risk-container');
+            riskContainer.innerHTML = '';
+            if (data.risk_indicators.length === 0) {
+                riskContainer.innerHTML = '<p>No critical risk indicators found.</p>';
+            } else {
+                data.risk_indicators.forEach(risk => {
+                    const el = document.createElement('div');
+                    el.className = `card risk-${risk.severity}`;
+                    el.innerHTML = `
+                        <h3>${risk.category} - <span style="color:${risk.severity==='high'?'red':'orange'}">${risk.severity.toUpperCase()}</span></h3>
+                        <p><strong>Reason:</strong> ${risk.reason}</p>
+                        <p><strong>Evidence:</strong> "${risk.evidence}"</p>
+                        <p><em>Manual legal review recommended.</em></p>
+                    `;
+                    riskContainer.appendChild(el);
+                });
+            }
+
+            // Clauses
+            const clausesContainer = document.getElementById('clauses-container');
+            clausesContainer.innerHTML = '';
+            data.extractions.forEach(ext => {
+                const el = document.createElement('div');
+                el.className = 'card';
+                el.innerHTML = `
+                    <h3>${ext.category}</h3>
+                    <p><strong>Question:</strong> ${ext.question}</p>
+                    <p><strong>Answer:</strong> "${ext.answer}"</p>
+                    <p><small>Confidence: ${ext.confidence.toFixed(2)}</small></p>
+                `;
+                clausesContainer.appendChild(el);
+            });
+        }
+    </script>
+</body>
+</html>
